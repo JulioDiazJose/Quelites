@@ -7,7 +7,7 @@ Rscript and data for the paper entitled: Edible wild plants and traditional indi
 
 # We set the directory 
 getwd()
-setwd('C:/Users/julio/Desktop/Resumenes a Congresos')
+setwd('C:/???')
 
 # Install packages
 library(dplyr)
