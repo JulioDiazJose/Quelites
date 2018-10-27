@@ -3,8 +3,7 @@ Rscript and data for the paper entitled: Edible wild plants and traditional indi
 #########################################################
 #########################################################
 ####R SCRIPT FOR THE DATA ANALYSIS#######################
-### Díaz-José, et al.(). Edible wild plants and #########
-###traditional indigenous knowledge in Zongolica, Mexico#
+####Edible wild plants and traditional indigenous knowledge in Zongolica, Mexico
 
 # We set the directory 
 getwd()
