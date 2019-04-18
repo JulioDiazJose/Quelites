@@ -1,13 +1,13 @@
 # Quelites
-Rscript and data for the paper entitled: Edible wild plants and traditional indigenous knowledge in Zongolica, Mexico
+Rscript and data for the paper entitled: 
+# Traditional knowledge of Edible Wild Plants Used by Indigenous Communities in Zongolica,Mexico
 #########################################################
 #########################################################
 ####R SCRIPT FOR THE DATA ANALYSIS#######################
-####Edible wild plants and traditional indigenous knowledge in Zongolica, Mexico
 
 # We set the directory 
 getwd()
-setwd('C:/???')
+setwd('C:/Users/julio/Desktop/Resumenes a Congresos')
 
 # Install packages
 library(dplyr)
@@ -40,16 +40,16 @@ summary(p.Base)
 library(Rmisc)
 library(lattice)
 # We must select the variables to analyze age range by ecosystem
-Barra <- Quelites %>% select(Age, Index1, Ecosystem)
+Barra <- Quelites %>% select(Age.range, Index1, Ecosystem)
 Barra
 # The SE for both variables based on the Index1
-Barras <- summarySE(Barra, measurevar="Index1", groupvars=c("Age","Ecosystem"))
+Barras <- summarySE(Barra, measurevar="Index1", groupvars=c("Age.range","Ecosystem"))
 Barras
 
 # Then we plot Age range (x), the number of species each person knows
 # for the two different ecosystems
 
-figura1 <- ggplot(Barras, aes(x=Age, y=Index1,fill=Ecosystem, levels = rev(Barra2$Ecosystem))) + 
+figura1 <- ggplot(Barras, aes(x=Age.range, y=Index1,fill=Ecosystem, levels = rev(Barras$Ecosystem))) + 
   geom_bar(position=position_dodge(), stat="identity") +
   geom_errorbar(aes(ymin=Index1-se, ymax=Index1 +se),
                 width=.2,                    # Ancho de las barras de error
@@ -59,6 +59,59 @@ figura1 <- ggplot(Barras, aes(x=Age, y=Index1,fill=Ecosystem, levels = rev(Barra
   
 figura1 + theme(axis.line = element_line(colour = "black"))
 figura1
+
+
+# We now can compute the comparison for two samples usin non-parametric test
+# The unpaired two-samples Wilcoxon test (also known as Wilcoxon rank sum test
+# or Mann-Whitney test) is a non-parametric alternative to the unpaired 
+# two-samples t-test, which can be used to compare two independent groups 
+# of samples. It’s used when your data are not normally distributed.
+# This is to known if there is a difference between ecosystems and age groups
+# We then select the different variables
+# For group 1= 18-30
+
+group1 <- filter (Quelites, Age.range== "18-30")
+group1
+###install.packages(ggpubr)
+###library(ggpubr)
+ggboxplot(group1, x = "Ecosystem", y = "Index1", 
+          color = "Ecosystem", palette = c("#00AFBB", "#E7B800"),
+          ylab = "Index1", xlab = "Groups")
+res <- wilcox.test(Index1 ~ Ecosystem, data = group1,
+                   exact = FALSE)
+res
+# For group 2= 31-41
+
+group2 <- filter (Quelites, Age.range== "31-41")
+group2
+ggboxplot(group2, x = "Ecosystem", y = "Index1", 
+          color = "Ecosystem", palette = c("#00AFBB", "#E7B800"),
+          ylab = "Index1", xlab = "Groups")
+res <- wilcox.test(Index1 ~ Ecosystem, data = group2,
+                   exact = FALSE)
+res
+# For group 3= 42-55
+
+group3 <- filter (Quelites, Age.range== "42-55")
+group3
+ggboxplot(group3, x = "Ecosystem", y = "Index1", 
+          color = "Ecosystem", palette = c("#00AFBB", "#E7B800"),
+          ylab = "Index1", xlab = "Groups")
+res <- wilcox.test(Index1 ~ Ecosystem, data = group3,
+                   exact = FALSE)
+res
+
+# For group 4= 56-90
+
+group4 <- filter (Quelites, Age.range== "56-90")
+group4
+ggboxplot(group4, x = "Ecosystem", y = "Index1", 
+          color = "Ecosystem", palette = c("#00AFBB", "#E7B800"),
+          ylab = "Index1", xlab = "Groups")
+res <- wilcox.test(Index1 ~ Ecosystem, data = group4,
+                   exact = FALSE)
+res
+res$p.value
 ###############################################################
 # Now we analyze the number of mentions each specie share represented
 # in a heatmap and grouping the species using a cluster analysis
@@ -81,16 +134,23 @@ figura1
 # A network of species is formed by a set of species N and a set of links L. 
 # We have a relationship between two species if they share at least one actor. 
 # We then construct an adjacency matrix of this network XN . 
-# An element of XN is noted by X_ik^N with i, k ∈ N . 
+# An element of XN is noted by X_ik^N with i, k ??? N . 
 # In this case for simple data manipulation we constructed
 # the data set "que" which represents the affiliation network
 # persons and species and the links
 
 # we use the igraph package to read the affiliation network"que"
-## library (igraph)
+library (igraph)
 
 quelites <- read.graph(file.choose("que"), format = "pajek")
 quelites
+plot(quelites)
+q_el <- as_edgelist(quelites)
+head(q_el)
+bipartite.mapping(quelites)
+V(quelites)$type <- bipartite_mapping(quelites)$type
+
+plot(quelites)
 
 # We convert the "two - mode" to "one-mode" network
 bipartite_matrix <- as_incidence_matrix(quelites)
@@ -140,6 +200,9 @@ melted_cor <- melt(upper_tri, na.rm = TRUE)
 
 ######################################################
 # Reorder the correlation matrix
+library(reshape2)
+library(tidyverse)
+
 event_matrix_prod <- reorder_cor(event_matrix_prod)
 upper_tri <- get_upper_tri(event_matrix_prod)
 # Melt the correlation matrix
@@ -174,8 +237,35 @@ ggheatmap +
 
 ### Finally we carried out a cluster analysis
 # cluster rows for quelites
+event_matrix_prod
 hc.rows <- hclust(dist(event_matrix_prod))
-plot(hc.rows)
+plot(hc.rows,hang=-1)
+# We then display the clusters on the graph
+rect.hclust(hc.rows, k=2, border = 2:3)
+##?hclust
+library(cluster)
+# Compute with agnes
+hc2 <- agnes(event_matrix_prod, method = "complete")
+
+# Agglomerative coefficient
+hc2$ac
+## [1] 0.7080
+
+# methods to assess
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+
+# function to compute coefficient
+ac <- function(x) {
+  agnes(event_matrix_prod, method = x)$ac
+}
+
+map_dbl(m, ac)
+##average    single  complete      ward 
+##0.6296803 0.5812100 0.7080015 0.8326995 
+
+hc3 <- agnes(event_matrix_prod, method = "ward")
+pltree(hc3, cex = 0.6, hang = -1, main = "Dendrogram of agnes") 
 
 # transpose the matrix and cluster columns
 hc.cols <- hclust(dist(t(event_matrix_prod)))
@@ -185,4 +275,6 @@ heatmap(event_matrix_prod[cutree(hc.rows,k=2)==1,], Colv=as.dendrogram(hc.cols),
 
 # draw heatmap for second cluster
 heatmap(event_matrix_prod[cutree(hc.rows,k=2)==2,], Colv=as.dendrogram(hc.cols), scale='none')
+
+
 
